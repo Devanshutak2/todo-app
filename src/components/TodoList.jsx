@@ -18,7 +18,7 @@ export default function TodoList({
   onDeleteList,
   onMoveTask,
 }) {
-  const [dragOver, setDragOver] = useState(null); // "Priority-index" | "Priority-zone"
+  const [dragOver, setDragOver] = useState(null);
 
   const sectionTasks = (priority) =>
     tasks
@@ -43,7 +43,7 @@ export default function TodoList({
     <div className="todo-list">
       <div className="list-header">
         <h3>
-          <span className="folder-icon">&#128193;</span> {list.name}
+          <span className="list-badge">{list.name.charAt(0).toUpperCase()}</span> {list.name}
         </h3>
         <div className="list-actions">
           <button className="add-btn" onClick={onOpenAdd}>+ Add</button>
@@ -53,14 +53,18 @@ export default function TodoList({
         </div>
       </div>
 
-      <p className="total-tasks">Total Tasks : {tasks.length}</p>
+      <p className="total-tasks">
+        {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'} in this list
+      </p>
 
       {PRIORITIES.map(({ name, className }) => {
         const secTasks = sectionTasks(name);
         return (
           <div className="priority-section" key={name}>
-            <div className={`priority-banner banner-${className}`}>
-              <span className={`dot dot-${className}`} /> {name} Priority
+            <div className={`priority-head head-${className}`}>
+              <span className={`dot dot-${className}`} />
+              <span className="priority-label">{name}</span>
+              <span className="count-chip">{secTasks.length}</span>
             </div>
 
             <div className="section-tasks">
