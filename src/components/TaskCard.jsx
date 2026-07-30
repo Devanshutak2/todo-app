@@ -4,14 +4,14 @@ export default function TaskCard({ task, onEdit, onDelete }) {
 
   return (
     <div
-      className="task-card"
+      className={`task-card edge-${(task.priority || 'Medium').toLowerCase()}`}
       draggable
       onDragStart={(e) => e.dataTransfer.setData('taskId', task.id)}
     >
       <strong className="task-title">{task.title}</strong>
       {task.description && <p className="task-desc">{task.description}</p>}
       {task.dueDate && (
-        <p className={`due ${overdue ? 'overdue' : ''}`}>{task.dueDate}</p>
+        <p className={`due ${overdue ? 'overdue' : ''}`}>&#128197; {task.dueDate}</p>
       )}
       <div className="task-actions">
         <button className="sq-btn" title="Edit task" onClick={() => onEdit(task)}>
