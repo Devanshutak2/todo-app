@@ -1,24 +1,66 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import TaskCard from './TaskCard.jsx';
 
 const PRIORITIES = [
-  { name: 'High', className: 'high' },
+  { name: 'High',   className: 'high'   },
   { name: 'Medium', className: 'medium' },
-  { name: 'Low', className: 'low' },
+  { name: 'Low',    className: 'low'    },
 ];
 
-// A To Do List card with three priority sections (High / Medium / Low).
-// Drag a task into any section of any list to move it there and set its priority.
+// Auto-scroll speed and edge threshold (px from top/bottom)
+const SCROLL_SPEED  = 10;
+const SCROLL_ZONE   = 80;
+
 export default function TodoList({
-  list,
-  tasks,
-  onOpenAdd,
-  onOpenEdit,
-  onDeleteTask,
-  onDeleteList,
-  onMoveTask,
+  list, tasks, onOpenAdd, onOpenEdit,
+  onDeleteTask, onDeleteList, onMoveTask,
 }) {
   const [dragOver, setDragOver] = useState(null);
+  const rafRef     = useRef(null);
+  const dragging   = useRef(false);
+
+  // ── Auto-scroll on drag ──────────────────────────────
+  useEffect(() => {
+    const onDragOver = (e) => {
+      if (!dragging.current) return;
+      const y = e.clientY;
+      const h = window.innerHeight;
+
+      cancelAnimationFrame(rafRef.current);
+
+      const scroll = () => {
+        if (!dragging.current) return;
+        if (y < SCROLL_ZONE) {
+          window.scrollBy(0, -SCROLL_SPEED);
+        } else if (y > h - SCROLL_ZONE) {
+          window.scrollBy(0, SCROLL_SPEED);
+        }
+        rafRef.current = requestAnimationFrame(scroll);
+      };
+
+      if (y < SCROLL_ZONE || y > h - SCROLL_ZONE) {
+        rafRef.current = requestAnimationFrame(scroll);
+      }
+    };
+
+    const onDragStart = () => { dragging.current = true; };
+    const onDragEnd   = () => {
+      dragging.current = false;
+      cancelAnimationFrame(rafRef.current);
+    };
+
+    window.addEventListener('dragover',  onDragOver);
+    window.addEventListener('dragstart', onDragStart);
+    window.addEventListener('dragend',   onDragEnd);
+
+    return () => {
+      window.removeEventListener('dragover',  onDragOver);
+      window.removeEventListener('dragstart', onDragStart);
+      window.removeEventListener('dragend',   onDragEnd);
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+  // ────────────────────────────────────────────────────
 
   const sectionTasks = (priority) =>
     tasks
@@ -66,7 +108,6 @@ export default function TodoList({
               <span className="priority-label">{name}</span>
               <span className="count-chip">{secTasks.length}</span>
             </div>
-
             <div className="section-tasks">
               {secTasks.map((task, i) => (
                 <div
@@ -79,7 +120,6 @@ export default function TodoList({
                   <TaskCard task={task} onEdit={onOpenEdit} onDelete={onDeleteTask} />
                 </div>
               ))}
-
               <div
                 className={`dropzone ${secTasks.length ? 'dropzone-slim' : ''} ${
                   dragOver === `${name}-zone` ? 'dropzone-active' : ''
